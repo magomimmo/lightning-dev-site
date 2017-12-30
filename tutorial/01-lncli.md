@@ -85,7 +85,7 @@ Breaking down the components:
 * `simnet=1` specifies that we are using the `simnet` network. This can be
 changed to `testnet=1`, or omitted entirely to connect to the actual Bitcoin
 / Litecoin network;
-* `rpcuser=kek` and `rpcpass=kek` sets default credentials for authenticating clients to the `btcd` instance.
+* `rpcuser=kek` and `rpcpass=kek` sets default credentials for authenticating clients to the `btcd` instance;
 * `txindex=1` is required so that the `lnd` client is able to query historical transactions from `btcd`.
 
 ### Configuring btcctl command line client
@@ -142,7 +142,7 @@ tree $GOPATH/dev
 
 To skip having to type out a bunch of flags on the command line every time, we can instead create a `lnd.conf` file, and the arguments specified therein will be loaded into `lnd` automatically. Any additional configuration added as a command line argument will be applied *after* reading from `lnd.conf`, and will overwrite the `lnd.conf` option if applicable.
 
-* On MacOS, `lnd.conf` is located at: `/Users/[username]/Library/Application\ Support/Lnd/lnd.conf`
+* On MacOS, `lnd.conf` is located at: `~/Library/Application\ Support/Lnd/lnd.conf`
 * On POSIX OSes: `~/.lnd/lnd.conf`
 
 Here is an example `lnd.conf` that can save us from re-specifying a bunch of command line options:
@@ -179,7 +179,7 @@ Breaking down the components:
 
 ### Running lnd nodes
 
-We can now run an `lnd` for each peer. Open 4 new terminal windows, one for each peer and `cd` in the corresponding directory we prepared in a previous step:
+We can now run an `lnd` for each peer. Open 4 new terminal windows, one for each peer and `cd` in the corresponding directory we previously prepared:
 
 ```bash
 # from alice's terminal window
@@ -214,7 +214,6 @@ During the tutorial we're going to interact a lot via `lncli` with the `lnd` nod
 To see all the commands and options available for `lncli`, simply type `lncli --help` or `lncli -h`, or `lncli help` or `lncli h`:
 
 ```
-# in the same terminal window you configured lnd nodes
 lncli -h
 NAME:
    lncli - control plane for your Lightning Network Daemon (lnd)
@@ -257,7 +256,7 @@ GLOBAL OPTIONS:
    --version, -v            print the version
 ```
 
-> NOTE: above we only pasted the `lncli` commands and global options we're going to use in this tutorial.
+> NOTE: above we only reported the `lncli` commands and global options we're going to use in this tutorial.
 
 `lncli` submits RPC calls to the peers `lnd` nodes and for each call we have to specify the `--no-macarrons` flag and the `--rpcserver` address which corresponds to `--rpcport=1000X` we set when starting the corresponding `lnd` node. To avoid to much typing for every interaction, we can set few aliases. Add the following to your `.bashrc` (or `.bash_profile` on MacOS):
 
@@ -674,7 +673,7 @@ Note as Bob now has 2 peers connections, one with Alice and one with Charlie.
 ### Setting up Lightning Network
 
 Before we can send payments, we will need to set up payment channels from Alice
-to Bob, and from Bob to Charlie.
+to Bob, and from Charlie to Bob.
 
 First, let's open the Alice<-->Bob channel.
 
