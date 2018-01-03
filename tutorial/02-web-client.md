@@ -134,11 +134,11 @@ btcctl generate 6
 
 You'll immediately see the change of the state of the channel from `pending` to `active`.
 
-As you remember, this above is needed to create the on-chain funding transaction in the simnet blockchain. Note that Alice's local balance is `991,312`, because she had to pay a fee of `8,688` Satoshi to the miner of the blocks recording the opening of the channel.
+As you remember, the above generation is needed to create the on-chain funding transaction in the simnet blockchain. Note that Alice's local balance is `991,312`, because she had to pay a fee of `8,688` Satoshi to the miner of the blocks recording the opening of the channel.
 
 #### Sending single hop payments
 
-In the `Payments/Invoices` section you should still see Alice's payments from the previous Stage 1 tutorial.  As from the Stage 1 tutorial, let Bob create a payment request. You need to do this in a terminal window.
+In the `Payments/Invoices` section you should still see Alice's payments from the previous Stage 1 tutorial. Let Bob create a payment request. You need to do this in a terminal window.
 
 ```bash
 # from the same terminal window used to generate blocks
@@ -149,11 +149,11 @@ lncli-bob addinvoice --value=100000
 }
 ```
 
-Now copy the payment request code from the terminal, click the `+` icon from the `Payment` panel of the `Payments/Invoices` section of the dashboard and paste it into the `Payment request` field. You should immediately see the details of the payment request. Click the `Send Payment` button. The off-chain payment from Alice to Bob is almost instantaneous as you can verify by refreshing the `Active channels` panel. In the `Channel` panel you should also see the local and the remote balances being updated with the new values (i.e `891,312` and `100,000`).
+Now copy the payment request code from the terminal, click the `+` icon from the `Payment` panel of the `Payments/Invoices` section of the dashboard and paste it into the `Payment request` field. You should immediately see the details of the payment request. Click the `Send Payment` button. The off-chain payment from Alice to Bob is almost instantaneous as you can verify by refreshing the `Active Channels` panel. In the `Active Channels` panel you should also see the local and the remote balances being updated with the new values (i.e `891,312` and `100,000`).
 
 #### Multi-hop payments
 
-The running `lncli-web` app is attached to Alice's LND node and to setup multi-hop off-chain payments we need to use again the terminals.
+The running `lncli-web` app is currently attached to Alice's LND node and to setup multi-hop off-chain payments we need to use again the terminal.
 
 ##### Open a channel from Charlie to Bob
 
