@@ -262,7 +262,7 @@ GLOBAL OPTIONS:
 
 > NOTE: above we only reported the `lncli` commands and global options we're going to use in this tutorial.
 
-`lncli` submits RPC calls to the peers `lnd` nodes and for each call we have to specify the `--no-macarrons` flag and the `--rpcserver` address which corresponds to `--rpcport=1000X` we set when starting the corresponding `lnd` node. To avoid to much typing for every interaction, we can set few aliases. Add the following to your `.bashrc` (or `.bash_profile` on MacOS):
+`lncli` submits RPC calls to the peers' `lnd` nodes and for each call we have to specify the `--no-macarrons` flag and the `--rpcserver` address which corresponds to `--rpcport=1000X` we set when starting the corresponding `lnd` node. To avoid to much typing for every interaction, we can set few aliases. Add the following to your `.bashrc` (or `.bash_profile` on MacOS):
 
 ```bash
 alias lncli-alice="lncli --rpcserver=localhost:10001 --no-macaroons"
@@ -339,7 +339,7 @@ lncli-charlie getinfo
 
 ### Setting up Bitcoin addresses
 
-Let's now create a new Bitcoin address for each peer. These will be the addresses that store peers' on-chain balance. Copy them down, because later we'll need them to fund Alice and Charlie and to set the miner as the recipient of the blocks generation.
+Let's now create a new Bitcoin address for each peer. These will be the addresses that store peers' on-chain balances. Copy them down, because later we'll need them to fund Alice and Charlie and to set the miner as the recipient of the blocks generation.
 
 ```bash
 # alice's address
@@ -422,7 +422,7 @@ We're not going to fund Bob, just to demonstrate that a peer does not need to be
 
 #### Activate segwit
 
-> NOTE: the role of the miner in this tutorial is optional. You can stay with Charlie's or Alice's address as the recipient of the generated blocks, but will have some trouble in making mental calculation about peers' balances.
+> NOTE: the role of the miner in this tutorial is optional. You can stay with Charlie's or Alice's address as the recipient of the generated blocks, but you will have some trouble in making mental calculation about peers' balances.
 
 Now stop again and re-run `btcd` by setting miner's address as the recipient of the mining rewards:
 
@@ -531,7 +531,7 @@ lncli-alice connect <BOB_PUBKEY>@localhost:10012
 
 Notice that `localhost:10012` corresponds to the `--peerport=10012` flag we set when starting the Bob `lnd` node.
 
-Connect Charlie to Bob as well:
+Connect Charlie to Bob:
 
 ```bash
 lncli-charlie connect <BOB_PUBKEY>@localhost:10012
@@ -540,7 +540,7 @@ lncli-charlie connect <BOB_PUBKEY>@localhost:10012
 }
 ```
 
-Let's check that the peers are now connected as defined:
+Let's check that the peers are now connected as expected:
 
 ```bash
 # Check that Alice has added Bob as a peer:
@@ -616,7 +616,7 @@ lncli-charlie listpeers
 Before we can send payments, we will need to set up payment channels from Alice
 to Bob, and from Charlie to Bob.
 
-> NOTE: In this tutorial we're going to use the so called single-funded channels (i.e channel opened by a funding transaction containing only inputs from the funder).
+> NOTE: In this tutorial we're going to use the so called single-funded channels (i.e channel opened by a funding transaction containing only inputs from the funder). At the moment dual-funded channels are not supported.
 
 > NOTE: Currently there is a limit of 16,777,216 (i.e. 0.16777216 BTC) Satoshi for the capacity of a single payment channel.
 
@@ -722,7 +722,7 @@ lncli-bob listchannels
 }
 ```
 
-Note as the commission fee (8,688 Satoshi) for the on-chain funding transactions to open the cannel have been payed by the channel funders (i.e. Alice and Charlie).
+Note as the commission fee (8,688 Satoshi) for the on-chain funding transactions to open the channel have been payed by the channel funders (i.e. Alice and Charlie).
 
 ### Sending single hop payments
 
