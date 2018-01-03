@@ -793,7 +793,7 @@ lncli-bob listchannels
     "channels": [
         {
             "active": true,
-            "remote_pubkey": <ALICE_PUBKEY,
+            "remote_pubkey": <ALICE_PUBKEY>,
             "channel_point": <ALICE_FUNDING_TXID>:<OUTPUT_NDX>,
             "chan_id": "333152023347200",
             "capacity": "1000000",
