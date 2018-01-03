@@ -422,6 +422,8 @@ We're not going to fund Bob, just to demonstrate that a peer does not need to be
 
 #### Activate segwit
 
+> NOTE: the role of the miner in this tutorial is optional. You can stay with Charlie's or Alice's address as the recipient of the generated blocks, but will have some trouble in making mental calculation about peers' balances.
+
 Now stop again and re-run `btcd` by setting miner's address as the recipient of the mining rewards:
 
 ```bash
@@ -613,6 +615,8 @@ lncli-charlie listpeers
 
 Before we can send payments, we will need to set up payment channels from Alice
 to Bob, and from Charlie to Bob.
+
+> NOTE: In this tutorial we're going to use the so called single-funded channels (i.e channel opened by a funding transaction containing only inputs from the funder).
 
 > NOTE: Currently there is a limit of 16,777,216 (i.e. 0.16777216 BTC) Satoshi for the capacity of a single payment channel.
 
