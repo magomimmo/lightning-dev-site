@@ -117,6 +117,7 @@ Breaking down the components: same as above.
 Let's start by running `btcd` from the first terminal window. If you don't have it up already, ensure you have your `$GOPATH` set, and run
 
 ```bash
+# from a new terminal window
 btcd
 ```
 
@@ -232,6 +233,7 @@ COMMANDS:
      ...
      newaddress       generates a new address.
      ...
+     sendcoins        send bitcoin on-chain to an address
      connect          connect to a remote lnd peer
      ...
      openchannel      Open a channel to an existing peer.
@@ -369,7 +371,7 @@ lncli-miner newaddress np2wkh
 
 ### Funding Peers
 
-That's a lot of configuration! Recall that at this point, we've generated on-chain addresses for Alice, Bob, Charlie and the miner as well. Now, we will get some practice working with `btcd` and fund these addresses with some `simnet` Bitcoin.
+That's a lot of configuration! Recall that at this point, we've generated on-chain addresses for Alice, Bob, Charlie and the `miner` as well. Now, we will get some practice working with `btcd` and fund these addresses with some `simnet` Bitcoin.
 
 Quit all the `lnd` running nodes and `btcd` as well:
 
@@ -381,65 +383,23 @@ lncli-miner stop
 btcctl stop
 ```
 
-#### Fund Alice and Charlie
+#### Funding miner and activating segwit
 
-To fund Alice's address re-run `btcd` by setting her address as the recipient of the mining rewards
+We'll use the miner to fund peers, but first we need to fund the miner itself by setting his address as the recipient of the blocks rewards.
 
-```bash
-# in the terminal window where you previously launched btcd
-btcd --miningaddr=<ALICE_ADDRESS>
-```
-
-Then generate 1 block for her
+First, run `btcd` again by specifying the `--miningaddr` option:
 
 ```bash
-# in the terminal window you previously used to stop lnd and btcd nodes
-btcctl generate 1
-```
-
-To fund Charlie's address, first stop again `btcd` and then re-run it by setting his address as the recipient of the mining rewards.
-
-```bash
-# in the terminal window you previously used to stop lnd and btcd nodes
-btcctl stop
-```
-
-```bash
-# in the terminal window where you previously launched btcd
-btcd --miningaddr=<CHARLIE_ADDRESS>
-```
-
-Then generate 1 block for him
-
-```bash
-# in the terminal window you previously used to stop lnd and btcd nodes
-btcctl generate 1
-```
-
-#### What about Bob?
-
-We're not going to fund Bob, just to demonstrate that a peer does not need to be funded on-chain for participating in off-chain payment channels. He only need to have an on-chain address and be connected with other peers, as we'll see in a moment.
-
-#### Activate segwit
-
-> NOTE: the role of the miner in this tutorial is optional. You can stay with Charlie's or Alice's address as the recipient of the generated blocks, but you will have some trouble in making mental calculation about peers' balances.
-
-Now stop again and re-run `btcd` by setting miner's address as the recipient of the mining rewards:
-
-```bash
-# in the terminal window you previously used to stop lnd and btcd nodes
-btcctl stop
-
-# in the terminal window window where you previously launched btcd
+# from the same terminal window previously used to launch btcd
 btcd --miningaddr=<MINER_ADDRESS>
 ```
-We need to generate about 300 blocks to activate segwit
+
+Then we need to generate about 300 blocks to activate `segwit`. This step funds the miner as well.
 
 ```bash
-# in the terminal window you previously used to stop lnd and btcd nodes
+# from the terminal windows previously used to stop the nodes
 btcctl generate 300
 ```
-
 Check that segwit is active:
 
 ```
@@ -448,9 +408,33 @@ btcctl getblockchaininfo | grep -A 1 segwit
       "status": "active",
 ```
 
-#### re-run lnd nodes
+#### Fund Alice and Charlie
 
-After having activated segwit, funded Alice and Charlie and set the miner as the recipient of the next block generations, we can re-run all the `lnd` nodes:
+To fund Alice and Charlie we now only need to relaunch the miner's `lnd` node and send some coins to their addresses from the miner's node:
+
+```bash
+# from the terminal window previously used to launch the miner's lnd node
+lnd --rpcport=10004 --peerport=10014 --restport=8004
+
+# form the terminal window previously used to stop nodes
+
+# fund Alice
+lncli-miner sendcoins --addr=<ALICE_ADDRESS> --amt=1000000
+
+# fund CHARLIE_PUBKEY
+lncli-miner sendcoins --addr=<CHARLIE_ADDRESS> --amt=1000000
+
+# generate six block confirmations
+btcctl generate 6
+```
+
+#### What about Bob?
+
+We're not going to fund Bob, just to demonstrate that a peer does not need to be funded on-chain for participating in off-chain payment channels. He only need to have an on-chain address and be connected with other peers, as we'll see in a moment.
+
+#### re-run peers' nodes
+
+After having activated segwit and funded Alice and Charlie we can re-run all the `lnd` nodes:
 
 ```bash
 # from alice's terminal window
@@ -461,9 +445,6 @@ lnd --rpcport=10002 --peerport=10012 --restport=8002
 
 # from charlie's terminal window
 lnd --rpcport=10003 --peerport=10013 --restport=8003
-
-# (optional) from miner's terminal window
-lnd --rpcport=10004 --peerport=10014 --restport=8004
 ```
 
 ### Check peers' balances
@@ -472,15 +453,13 @@ Let's now check the on-chain balance of each peer:
 
 ```bash
 # in the same terminal windows already used for lncli and btcctl
-
 # alice's balance
 lncli-alice walletbalance
 {
-    "total_balance": "5000000000",
-    "confirmed_balance": "5000000000", <--- 50 BTC
+    "total_balance": "1000000",
+    "confirmed_balance": "1000000", <--- 0.01 BTC
     "unconfirmed_balance": "0"
 }
-
 # bob's balance
 lncli-bob walletbalance
 {
@@ -492,8 +471,8 @@ lncli-bob walletbalance
 # charlie's balance
 lncli-charlie walletbalance
 {
-    "total_balance": "5000000000",
-    "confirmed_balance": "5000000000", <--- 50 BTC
+    "total_balance": "1000000",
+    "confirmed_balance": "1000000", <--- 0.01 BTC
     "unconfirmed_balance": "0"
 }
 ```
@@ -513,8 +492,8 @@ lncli-bob getinfo
     "num_pending_channels": 0,
     "num_active_channels": 0,
     "num_peers": 0,
-    "block_height": 302,
-    "block_hash": "02269074a14839b4cd4f7678b9231066a08f745524b0341c964c45ff355dda98",
+    "block_height": 306,
+    "block_hash": "0ad0407db0f94765c35448e85f1bf258aeba05405d44bead9618f6db5417077f",
     "synced_to_chain": true,
     "testnet": false,
     "chains": [
@@ -551,12 +530,12 @@ lncli-alice listpeers
             "pub_key": <BOB_PUBKEY>,
             "peer_id": 1,
             "address": "127.0.0.1:10012",
-            "bytes_sent": "175",
-            "bytes_recv": "175",
+            "bytes_sent": "149",
+            "bytes_recv": "149",
             "sat_sent": "0",
             "sat_recv": "0",
             "inbound": true,
-            "ping_time": "237"
+            "ping_time": "0"
         }
     ]
 }
@@ -568,24 +547,24 @@ lncli-bob listpeers
         {
             "pub_key": <ALICE_PUBKEY>,
             "peer_id": 1,
-            "address": "127.0.0.1:56515",
+            "address": "127.0.0.1:50757",
             "bytes_sent": "175",
             "bytes_recv": "175",
             "sat_sent": "0",
             "sat_recv": "0",
             "inbound": false,
-            "ping_time": "234"
+            "ping_time": "233"
         },
         {
             "pub_key": <CHARLIE_PUBKEY>,
             "peer_id": 2,
-            "address": "127.0.0.1:56521",
-            "bytes_sent": "149",
-            "bytes_recv": "149",
+            "address": "127.0.0.1:50763",
+            "bytes_sent": "175",
+            "bytes_recv": "175",
             "sat_sent": "0",
             "sat_recv": "0",
             "inbound": false,
-            "ping_time": "0"
+            "ping_time": "278"
         }
     ]
 }
@@ -623,7 +602,7 @@ to Bob, and from Charlie to Bob.
 First, let's open the Alice<-->Bob channel:
 
 ```bash
-lncli-alice openchannel --node_key=<BOB_PUBKEY> --local_amt=1000000
+lncli-alice openchannel --node_key=<BOB_PUBKEY> --local_amt=100000
 {
 	"funding_txid": <ALICE_FUNDING_TXID>
 }
@@ -634,14 +613,14 @@ lncli-alice openchannel --node_key=<BOB_PUBKEY> --local_amt=1000000
 Now let's open the Charlie<-->Bob channel:
 
 ```bash
-lncli-charlie openchannel --node_key=<BOB_PUBKEY> --local_amt=800000 --push_amt=200000
+lncli-charlie openchannel --node_key=<BOB_PUBKEY> --local_amt=80000 --push_amt=20000
 {
 	"funding_txid": <CHARLIE_FUNDING_TXID>
 }
 ```
-> NOTE: This time we supplied the `--push_amt` argument, which specifies the amount of money we want to other party to have at the first channel state. `--push_amt` is the number of Satoshi to push to the remote side as part of the initial commitment state (default: 0). In other words, it is an amount of initial funds that the sender (i.e. Charlie) is unconditionally giving to the receiver (i.e. Bob).
+> NOTE: This time we supplied the `--push_amt` argument, which specifies the amount of coins we want to other party to have at the first channel state. `--push_amt` is the number of Satoshi to push to the remote side as part of the initial commitment state (default: 0). In other words, it is an amount of initial funds that the sender (i.e. Charlie) is unconditionally giving to the receiver (i.e. Bob).
 
-We now need to mine 6 blocks so that payment channels are considered valid (i.e. 3 blocks for the funding transaction and other 3 blocks for the confirmation of the subscription):
+We now need to mine 6 blocks so that payment channels are considered fully valid (i.e. 3 blocks for the funding transaction and other 3 blocks for the confirmation of the subscription):
 
 ```bash
 btcctl generate 6
@@ -659,8 +638,8 @@ lncli-alice listchannels
             "remote_pubkey": <BOB_PUBKEY>,
             "channel_point": <ALICE_FUNDING_TXID>:<OUTPUT_NDX>,
             "chan_id": "333152023347200",
-            "capacity": "1000000",
-            "local_balance": "991312",  <--- Alice
+            "capacity": "100000",
+            "local_balance": "91312",  <--- Alice
             "remote_balance": "0",      <--- Bob
             "commit_fee": "8688",       <--- on chain tx fee
             "commit_weight": "600",
@@ -685,9 +664,9 @@ lncli-bob listchannels
             "remote_pubkey": <ALICE_PUBKEY>,
             "channel_point": <ALICE_FUNDING_TXID>:<OUTPUT_NDX>,
             "chan_id": "333152023347200",
-            "capacity": "1000000",
+            "capacity": "100000",
             "local_balance": "0",         <--- Bob
-            "remote_balance": "991312",   <--- Alice  
+            "remote_balance": "91312",   <--- Alice  
             "commit_fee": "8688",         <--- on chain tx fee
             "commit_weight": "552",
             "fee_per_kw": "12000",
@@ -705,8 +684,8 @@ lncli-bob listchannels
             "channel_point": <CHARLIE_FUNDING_TXID>:<OUTPUT_NDX>,
             "chan_id": "333152023281664",
             "capacity": "800000",
-            "local_balance": "200000",      <--- Bob
-            "remote_balance": "591312",     <--- Charlie
+            "local_balance": "20000",      <--- Bob
+            "remote_balance": "51312",     <--- Charlie
             "commit_fee": "8688",           <--- on chain tx fee
             "commit_weight": "724",
             "fee_per_kw": "12000",
@@ -730,10 +709,27 @@ Finally, the exciting part: sending payments! Let's send a payment from Alice to
 
 > NOTE: Currently there is limit of 4,294,967 Shatoshi (i.e. 0.04294967 BTC) for a single off-chain payment.
 
-First, Bob needs to generate an invoice:
+First, let's verify the peer's channel balances:
 
 ```bash
-lncli-bob addinvoice --value=100000
+# Alice
+lncli-alice channelbalance
+{
+    "balance": "91312"
+}
+
+# Bob
+lncli-bob channelbalance
+{
+    "balance": "20000" <-- 0 Alice<->Bob + 20,000 in the Charlie<-->Bob
+}
+# Charlie
+```
+
+Bob needs to generate an invoice:
+
+```bash
+lncli-bob addinvoice --value=10000
 {
         "r_hash": "<a_random_rhash_value>",
         "pay_req": "<encoded_invoice>",
@@ -746,90 +742,31 @@ And Alice needs to send the corresponding payment to Bob:
 lncli-alice sendpayment --pay_req=<encoded_invoice>
 {
 	"payment_error": "",
-	"payment_preimage": "736f4472c3002fbb37eee82714f44ffae0cea3e8cce1df2123481cc0c0147176",
+	"payment_preimage": "65906f1cef5510c55637ecfa2aba6c86bd2d3383eb98aff1336b148cdd6cff75",
 	"payment_route": {
-		"total_time_lock": 452,
-		"total_amt": 100000,
+		"total_time_lock": 456,
+		"total_amt": 10000,
 		"hops": [
 			{
-				"chan_id": 333152023347200,
-				"chan_capacity": 1000000,
-				"amt_to_forward": 100000,
-				"expiry": 452
+				"chan_id": 337550069792768,
+				"chan_capacity": 100000,
+				"amt_to_forward": 10000,
+				"expiry": 456
 			}
 		]
 	}
 }
 
 # Check that Alice's channel balance was decremented accordingly:
-lncli-alice listchannels
+lncli-alice channelbalance
 {
-    "channels": [
-        {
-            "active": true,
-            "remote_pubkey": <BOB_PUBKEY>,
-            "channel_point": <ALICE_FUNDING_TXID>:<OUTPUT_NDX>,
-            "chan_id": "333152023347200",
-            "capacity": "1000000",
-            "local_balance": "891312",    <--- Alice
-            "remote_balance": "100000",   <--- Bob
-            "commit_fee": "8688",
-            "commit_weight": "724",
-            "fee_per_kw": "12000",
-            "unsettled_balance": "0",
-            "total_satoshis_sent": "100000",
-            "total_satoshis_received": "0",
-            "num_updates": "2",           <--- number of updates
-            "pending_htlcs": [
-            ],
-            "csv_delay": 4
-        }
-    ]
+    "balance": "81312"  <-- -10,000
 }
 
 # Check that Bob's channel was credited with the payment amount:
-lncli-bob listchannels
+lncli-bob channelbalance
 {
-    "channels": [
-        {
-            "active": true,
-            "remote_pubkey": <ALICE_PUBKEY>,
-            "channel_point": <ALICE_FUNDING_TXID>:<OUTPUT_NDX>,
-            "chan_id": "333152023347200",
-            "capacity": "1000000",
-            "local_balance": "100000",      <--- Bob
-            "remote_balance": "891312",     <--- Alice
-            "commit_fee": "8688",
-            "commit_weight": "724",
-            "fee_per_kw": "12000",
-            "unsettled_balance": "0",
-            "total_satoshis_sent": "0",
-            "total_satoshis_received": "100000",
-            "num_updates": "2",
-            "pending_htlcs": [
-            ],
-            "csv_delay": 4
-        },
-        {
-            "active": true,
-            "remote_pubkey": <CHARLIE_PUBKEY>,
-            "channel_point": <CHARLIE_FUNDING_TXID>:<OUTPUT_NDX>,
-            "chan_id": "333152023281664",
-            "capacity": "800000",
-            "local_balance": "200000",        <--- Bob
-            "remote_balance": "591312",       <--- Charlie
-            "commit_fee": "8688",
-            "commit_weight": "724",
-            "fee_per_kw": "12000",
-            "unsettled_balance": "0",
-            "total_satoshis_sent": "0",
-            "total_satoshis_received": "0",
-            "num_updates": "0",               <--- no updates
-            "pending_htlcs": [
-            ],
-            "csv_delay": 4
-        }
-    ]
+    "balance": "30000"  <-- +10,000
 }
 ```
 
@@ -855,60 +792,47 @@ Then Alice has to pay it:
 lncli-alice sendpayment --pay_req=<encoded_invoice>
 {
 	"payment_error": "",
-	"payment_preimage": "1c11c4becd73610c3477e8a0aad056af7b5b35cefd024fc0bd167bf189f82137",
+	"payment_preimage": "d3d9a5d1f03302592a6beda00e1906711d693bbeb911e31a7811f59ba5204efb",
 	"payment_route": {
-		"total_time_lock": 596,
-		"total_fees": 1,                <--- total payment fees
+		"total_time_lock": 600,
+		"total_fees": 1,        <-- very small fee to Bob
 		"total_amt": 10001,
 		"hops": [
 			{
-				"chan_id": 333152023347200,
-				"chan_capacity": 1000000,
+				"chan_id": 337550069792768,
+				"chan_capacity": 100000,
 				"amt_to_forward": 10000,
-				"fee": 1,                   <--- fee to Bob
-				"expiry": 452
+				"fee": 1,
+				"expiry": 456
 			},
 			{
-				"chan_id": 333152023281664,
-				"chan_capacity": 800000,
+				"chan_id": 337550069858304,
+				"chan_capacity": 80000,
 				"amt_to_forward": 10000,
-				"expiry": 452
+				"expiry": 456
 			}
 		]
 	}
 }
 ```
 
-> NOTE: the channel fee is very low
-
-
-Now check that Charlie's channel was credited with the payment amount (e.g. that
-the `remote_balance` has been decremented by 10,000)
+Now check the peers' channels have been updated as expected
 
 ```bash
-lncli-charlie listchannels
+# alice
+lncli-alice channelbalance
 {
-    "channels": [
-        {
-            "active": true,
-            "remote_pubkey": <BOB_PUBKEY,
-            "channel_point": <CHARLIE_FUNDING_TXID>:<OUTPUT_NDX>,
-            "chan_id": "333152023281664",
-            "capacity": "800000",
-            "local_balance": "601312",      <--- Charlie
-            "remote_balance": "190000",     <--- Bob
-            "commit_fee": "8688",
-            "commit_weight": "724",
-            "fee_per_kw": "12000",
-            "unsettled_balance": "0",
-            "total_satoshis_sent": "0",
-            "total_satoshis_received": "10000", <-- payment value
-            "num_updates": "2",
-            "pending_htlcs": [
-            ],
-            "csv_delay": 4
-        }
-    ]
+    "balance": "71310"
+}
+# bob
+lncli-bob channelbalance
+{
+    "balance": "30001"
+}
+charlie
+lncli-charlie channelbalance
+{
+    "balance": "61312"
 }
 ```
 
@@ -916,9 +840,23 @@ lncli-charlie listchannels
 
 For practice, let's try closing the channels by passing the channel point and the output index to the `closechannel` command.
 
-The channel point consists of two numbers separated by a colon, which uniquely identifies the channel. The first number is `funding_txid` and the second number is `output_index`.
+The channel point consists of two numbers separated by a colon, which uniquely identifies the channel. The first number is `funding_txid` and the second number is `output_index`. You get the channel point from the `lisrchannels` command:
 
-```bash
+
+```
+lncli-bob listchannels
+{
+    "channels": [
+        {   ...
+            "channel_point": <ALICE_FUNDING_TXID>:<OUTPUT_NDX>,
+            ...
+        },
+        {   ...
+            "channel_point": <CHARLIE_FUNDING_TXID:<OUTPUT_NDX>,
+            ...
+    ]
+}
+
 # Close the Alice<-->Bob channel from Alice's side.
 lncli-alice closechannel --funding_txid=<ALICE_FUNDING_TXID> --output_index=0
 
@@ -926,10 +864,10 @@ lncli-alice closechannel --funding_txid=<ALICE_FUNDING_TXID> --output_index=0
 lncli-charlie closechannel --funding_txid=<CHARLIE_FUNDING_TXID> --output_index=0
 ```
 
-Finally, as usual, we need to generate 6 blocks to close channels:
+Finally, as usual, we need to generate at least a block to close channels:
 
 ```bash
-btcctl generate 6
+btcctl generate 1
 ```
 
 And check the peers' on-chain balances:
@@ -938,25 +876,24 @@ And check the peers' on-chain balances:
 # check alice's on-chain balance
 lncli-alice walletbalance
 {
-    "total_balance": "4999872874",
-    "confirmed_balance": "4999872874",
+    "total_balance": "962874",
+    "confirmed_balance": "962874",
     "unconfirmed_balance": "0"
 }
 
 # Check that Bob's on-chain balance was credited by his settled amount in the
 # channel. Recall that Bob previously had no on-chain Bitcoin:
-lncli-bob walletbalance
 {
-    "total_balance": "300001",
-    "confirmed_balance": "300001",
+    "total_balance": "30001",
+    "confirmed_balance": "30001",
     "unconfirmed_balance": "0"
 }
 
 # check charlie's on-chain balance
 lncli-charlie walletbalance
 {
-    "total_balance": "4999792876",
-    "confirmed_balance": "4999792876",
+    "total_balance": "972876",
+    "confirmed_balance": "972876",
     "unconfirmed_balance": "0"
 }
 ```
