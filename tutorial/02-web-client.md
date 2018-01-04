@@ -115,7 +115,7 @@ As you see, the server inform you that the web app is listening on port 8280 of 
 
 ### Poking around
 
-Now it would be a good time to repeat the Stage 1 workflow, except this time we're going to do it through the web dashboard. In the `Node Info` panel of the `Node and Network Information` section, you should see that block height is 314, the number of blocks we previously generated in Stage 1. You should also see that there are no current active o pending channels, because we closed them at the end of the previous tutorial. The `Network Info` panel inform you there are 3 connected nodes (i.e. Alice, Bob and Charlie). The total network capacity is 0, because there are no active channels at the moment. In the `Wallet and Channel Balances` section you can see current Alice's balances, i.e. the wallet balance and the channel one.
+Now it would be a good time to repeat the Stage 1 workflow, except this time we're going to do it through the web dashboard. In the `Node Info` panel of the `Node and Network Information` section, you should see that block height is 313, the number of blocks we previously generated in Stage 1. You should also see that there are no current active o pending channels, because we closed them at the end of the previous tutorial. The `Network Info` panel inform you there are 3 connected nodes (i.e. Alice, Bob and Charlie). The total network capacity is 0, because there are no active channels at the moment. In the `Wallet and Channel Balances` section you can see current Alice's wallet balances (962,874).
 
 #### Alice's connections
 
@@ -123,9 +123,9 @@ In the `Peers` section you see that Alice is connected to one node (i.e. Bob's n
 
 #### Open a channel between Alice and Bob
 
-To open a new channel with Bob click the `+` icon in the  'Active Channels' panel and select Bob's public-key from the drop-down menu of the `Node Pubkey` field. Type `1000000` in the `Local amount` field and `0` in the `Push amount` field. Then click the `Open Channel` button. You should now see that this channel is pending.
+To open a new channel with Bob click the `+` icon in the  'Active Channels' panel and select Bob's public-key from the drop-down menu of the `Node Pubkey` field. Type `100000` in the `Local amount` field and `0` in the `Push amount` field. Then click the `Open Channel` button. You should now see that this channel is now pending.
 
-Open a new terminal window and generate 6 blocks to make the new channel confirmed.
+Open a new terminal window and generate 6 blocks to make the new channel fully valid.
 
 ```bash
 # from a new terminal window
@@ -134,7 +134,7 @@ btcctl generate 6
 
 You'll immediately see the change of the state of the channel from `pending` to `active`.
 
-As you remember, the above generation is needed to create the on-chain funding transaction in the simnet blockchain. Note that Alice's local balance is `991,312`, because she had to pay a fee of `8,688` Satoshi to the miner of the blocks recording the opening of the channel.
+As you remember, the above generation is needed to create the on-chain funding transaction in the simnet blockchain. Note that Alice's local balance is `91,312`, because she had to pay a fee of `8,688` Satoshi to the miner of the blocks recording the opening transaction of the channel.
 
 #### Sending single hop payments
 
@@ -142,14 +142,14 @@ In the `Payments/Invoices` section you should still see Alice's payments from th
 
 ```bash
 # from the same terminal window used to generate blocks
-lncli-bob addinvoice --value=100000
+lncli-bob addinvoice --value=10000
 {
 	"r_hash": "b75e17df03eec97af0744329b653b841f830e4acd5b69413a6349e1cced5e35a",
 	"pay_req": <PAYMENT_REQ>
 }
 ```
 
-Now copy the payment request code from the terminal, click the `+` icon from the `Payment` panel of the `Payments/Invoices` section of the dashboard and paste it into the `Payment request` field. You should immediately see the details of the payment request. Click the `Send Payment` button. The off-chain payment from Alice to Bob is almost instantaneous as you can verify by refreshing the `Active Channels` panel. In the `Active Channels` panel you should also see the local and the remote balances being updated with the new values (i.e `891,312` and `100,000`).
+Now copy the payment request code from the terminal, click the `+` icon from the `Payment` panel of the `Payments/Invoices` section of the dashboard and paste it into the `Payment request` field. You should immediately see the details of the payment request. Click the `Send Payment` button. The off-chain payment from Alice to Bob is almost instantaneous as you can verify after a while in the `Active Channels` panel where you should see the local and the remote balances being updated with the new values (i.e `81,312` and `10,000`).
 
 #### Multi-hop payments
 
@@ -164,9 +164,9 @@ As we previously did in Stage 1 tutorial, Charlie has to open a single-funded pa
 lncli-bob getinfo
 
 # open the channel with Bob
-lncli-charlie openchannel --node_key=02aaeeb6c7786d42b2d7f401003763868d1d1c0806bb19f3873cf793c46dbf71f2 --local_amt=800000 --push_amt=200000
+lncli-charlie openchannel --node_key=<BOB_PUBKEY> --local_amt=80000 --push_amt=20000
 {
-	"funding_txid": "018074881921e71400d72cfeff2a92fdc6115d5d92d309fad11585299e144b5f"
+	"funding_txid": <CHARLIE_FUNDING_TXID>
 }
 ```
 
@@ -176,7 +176,7 @@ As usual, this transaction has to be recorded and confirmed by the blockchain, s
 btcctl generate 6
 ```
 
-If you visit the dashboard, you should see the updated information in the `Network info` panel: there are now 2 channels and the total capacity of the channel network is `1800000` (i.e. the sum of the capacity of the two established channels).
+If you visit the dashboard, you should see in a short time the updated information in the `Network info` panel: there are now 2 channels and the total capacity of the channel network is `180000` (i.e. the sum of the capacity of the two established channels).
 
 ##### Charlie adding invoice
 
@@ -195,16 +195,17 @@ Copy the payment request identifier.
 
 Go back to the dashboard and click the `+` from the `Payment` panel. Paste the copied payment request in the corresponding field. You should immediately see the payment detail, including Charlie's public-key as the destination of the payment. Click the `Send payment` button. You should now see an almost instant update of the `Payments` panel and if you refresh the `Active Channels` panel you should see the balances being updated as well:
 
-* the value of the local balance is know `881310` (remote balance is `110001`).
+* the value of the local balance is know `71310` (remote balance is `20001`).
 * there is a new payment in the `Payment` panel.
 
 ### Other peers's view
 
 As said, when we started the `lncli-web` app we attached it to Alice's LND node. But we could also attach it to Bob or Charlie's nodes.
 
-Close the browser window, stop the running node server (CTRL-C/CMD-C) and rerun it by passing the LND address of Bob's node.
+Close the browser window, stop the running node server (CTRL-C) and rerun it by passing the LND address of Bob's node.
 
 ```bash
+# stop the node server
 node server --lndhost=localhost:10001
 ...
 info:    App listening on localhost port 8280
@@ -233,7 +234,7 @@ info:    App listening on localhost port 8280
 
 Feel free to try the dashboard on your own - the web dashboard is intuitive enough that we don't need step by step instructions for it.
 
-When done, close the active channels, stop the node server, all the LND's nodes and finally the `btcd` daemon.
+When done, close the active channels, stop the node server, all the LND's nodes and finally stop the `btcd` daemon as well.
 
 > NOTE: The LND wallet is coming soon! Sign up for our newsletter at the bottom
 of our [community page](//lightning.community#mc-embedded-subscribe-form)
